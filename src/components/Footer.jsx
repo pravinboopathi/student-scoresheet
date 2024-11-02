@@ -4,28 +4,36 @@ import logo from '../images/srcaslogo-bgremoved.png';
 const Footer = () => {
     const currentYear = new Date().getFullYear();
 
+    const links = [
+        { href: "/how-to-use", text: "How to Use" },
+        { href: "/support", text: "Support" },
+        { href: "https://www.srcas.ac.in", text: "Official SRCAS Website", external: true },
+        { href: "/view-sheets", text: "View Sheets" }
+    ];
+
     return (
-        <footer className=" bg-gray-300 text-gray-800">
+        <footer className="bg-blue-700">
             <div className="container py-6 mx-auto flex flex-col items-center px-4">
-                <img src={logo} alt="SRCAS Logo" className="mb-4 h-12" />
-               
-                <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4 mb-4">
-                    <a href="/how-to-use" className="underline underline-offset-4">How to Use</a>
-                    <a href="/support" className="underline underline-offset-4">Support</a>
-                    <a 
-                        href="https://www.srcas.ac.in" 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
-                        className="underline underline-offset-4"
-                    >
-                        Official SRCAS Website
-                    </a>
-                    <a href="/view-sheets" className="underline underline-offset-4">View Sheets</a>
+                <div className='bg-white px-2 py-2 rounded-full mb-6'>
+                    <img src={logo} alt="SRCAS Logo" className="h-12" />
                 </div>
-               
-                {/* <p className="text-xs md:text-sm text-gray-600 text-center">Crafted with care by Velan (Developer) & Pravin (Designer)</p> */}
+                <div className="flex gap-4 text-xs md:text-base text-gray-300">
+                    {links.map(({ href, text, external }) => (
+                        <a
+                            key={text}
+                            href={href}
+                            className="underline font-medium underline-offset-4 hover:text-white"
+                            target={external ? "_blank" : "_self"}
+                            rel={external ? "noopener noreferrer" : undefined}
+                        >
+                            {text}
+                        </a>
+                    ))}
+                </div>
             </div>
-            <p className="text-sm pb-2 md:text-base font-medium text-center text-purple-900">&copy; {currentYear} SRCAS. All rights reserved.</p>
+            <p className="text-xs pb-2 md:text-base font-medium text-center text-purple-200">
+                &copy; {currentYear} SRCAS. All rights reserved.
+            </p>
         </footer>
     );
 };

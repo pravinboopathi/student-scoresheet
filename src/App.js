@@ -4,6 +4,7 @@ import ErrorPage from './ErrorPage';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ResponsiveWrapper from './components/ResponsiveWrapper';
+import MarksEntry from './components/MarksEntry';
 
 function App() {
   return (
@@ -13,8 +14,7 @@ function App() {
           <Navbar />
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/marks-entry" element={<Home />} />
-            <Route path="/view-sheets" element={<Home />} />
+            <Route path="/marks-entry" element={<MarksEntry />} />
             <Route path="*" element={<ErrorPage />} />
           </Routes>
           <Footer />
