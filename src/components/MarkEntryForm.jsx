@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import * as XLSX from 'xlsx';
+
 import RangeModal from './RangeModal';
 import StudentList from './StudentList';
 import { FaChevronLeft,FaChevronRight  } from "react-icons/fa";
@@ -64,25 +64,7 @@ const MarkEntry = ({ selectedPattern }) => {
         }));
     };
 
-    const downloadToExcel = () => {
-        const data = students.flatMap(regNum =>
-            selectedPattern.flatMap(pattern => {
-                const sectionMarks = marks[regNum][pattern.section] || {};
-                const totalQuestions = parseInt(pattern.description.split(' x ')[0]);
-                return Array.from({ length: totalQuestions }).map((_, questionIndex) => ({
-                    RegNum: regNum,
-                    Section: pattern.section,
-                    Question: `Question ${questionIndex + 1}`,
-                    Mark: sectionMarks[questionIndex] || 0
-                }));
-            })
-        );
 
-        const worksheet = XLSX.utils.json_to_sheet(data);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Marks Entry");
-        XLSX.writeFile(workbook, "MarkEntry.xlsx");
-    };
 
     const totalPages = Math.ceil(students.length / studentsPerPage);
     const currentStudents = students.slice((currentPage - 1) * studentsPerPage, currentPage * studentsPerPage);
