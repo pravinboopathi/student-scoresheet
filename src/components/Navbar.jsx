@@ -1,12 +1,28 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import srcasLogo from '../images/srcaslogo.png';
 
 const Navbar = () => {
     const location = useLocation();
+    const navigate = useNavigate();
 
     const isActive = (path) => {
         return location.pathname === path;
+    };
+
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+
+    const handleMarksEntryClick = () => {
+        if (isLoggedIn) {
+            navigate('/marks-entry');
+        } else {
+            navigate('/login');
+        }
+    };
+
+    const handleLogout = () => {
+        localStorage.removeItem('isLoggedIn');
+        navigate('/login');
     };
 
     return (
@@ -21,11 +37,10 @@ const Navbar = () => {
                                 alt="SRCAS Logo" 
                                 className="h-12 w-auto"
                             />
-                            
                         </Link>
                     </div>
 
-                    {/* Right: Navigation Links and Login */}
+                    {/* Right: Navigation Links and Login/Logout */}
                     <div className="flex items-center space-x-4">
                         <div className="hidden md:flex items-center space-x-4">
                             <Link
@@ -38,8 +53,8 @@ const Navbar = () => {
                             >
                                 Home
                             </Link>
-                            <Link
-                                to="/marks-entry"
+                            <button
+                                onClick={handleMarksEntryClick}
                                 className={`px-3 py-2 rounded-md text-sm font-medium transition-colors
                                     ${isActive('/marks-entry') 
                                         ? 'text-[#7908a9] bg-purple-50' 
@@ -47,7 +62,7 @@ const Navbar = () => {
                                     }`}
                             >
                                 Enter Marks
-                            </Link>
+                            </button>
                             <Link
                                 to="/view-sheets"
                                 className={`px-3 py-2 rounded-md text-sm font-medium transition-colors
@@ -60,16 +75,28 @@ const Navbar = () => {
                             </Link>
                         </div>
                         
-                        {/* Login Button */}
-                        <button 
-                            className="bg-[#FFD700] text-gray-800 px-4 py-2 rounded-md text-sm font-medium 
-                                     hover:bg-[#F4C430] transition-colors shadow-sm flex items-center space-x-2"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                            </svg>
-                            <span>Login</span>
-                        </button>
+                        {/* Login/Logout Button */}
+                        {isLoggedIn ? (
+                            <button 
+                                onClick={handleLogout}
+                                className="bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium 
+                                         hover:bg-red-700 transition-colors shadow-sm"
+                            >
+                                Logout
+                            </button>
+                        ) : (
+                            <Link to="/login">
+                                <button 
+                                    className="bg-[#FFD700] text-gray-800 px-4 py-2 rounded-md text-sm font-medium 
+                                             hover:bg-[#F4C430] transition-colors shadow-sm flex items-center space-x-2"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                                    </svg>
+                                    <span>Login</span>
+                                </button>
+                            </Link>
+                        )}
                     </div>
                 </div>
             </div>
