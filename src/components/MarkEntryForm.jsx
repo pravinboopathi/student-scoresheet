@@ -3,9 +3,10 @@ import React, { useEffect, useState, useRef } from 'react';
 import RangeModal from './RangeModal';
 import StudentList from './StudentList';
 import { FaChevronLeft,FaChevronRight  } from "react-icons/fa";
+import { exportToExcel } from '../utils/excelExport';
 
 
-const MarkEntry = ({ selectedPattern }) => {
+const MarkEntry = ({ selectedPattern, formData }) => {
     const [students, setStudents] = useState([]);
     const [marks, setMarks] = useState({});
     const [regFrom, setRegFrom] = useState('');
@@ -29,7 +30,10 @@ const MarkEntry = ({ selectedPattern }) => {
             studentArray.forEach(regNum => {
                 initialMarks[regNum] = selectedPattern.reduce((acc, pattern) => {
                     const totalQuestions = parseInt(pattern.description.split(' x ')[0]);
-                    acc[pattern.section] = Array.from({ length: totalQuestions }, () => '');
+                    acc[pattern.section] = Array.from({ length: totalQuestions }, () => ({
+                        choice: 'A',
+                        score: ''
+                    }));
                     return acc;
                 }, {});
             });
@@ -48,17 +52,21 @@ const MarkEntry = ({ selectedPattern }) => {
         setTotalStudents(0);
     }, [selectedPattern]);
 
-    const handleInputChange = (regNum, section, index, maxMarksPerQuestion, e) => {
-        const inputValue = e.target.value;
-        const parsedValue = inputValue === '' ? '' : Math.min(Math.max(parseInt(inputValue, 10), 0), maxMarksPerQuestion);
-
+    const handleInputChange = (regNum, section, index, maxMarksPerQuestion, e, type = 'score') => {
+        const value = e.target.value;
+        
         setMarks(prev => ({
             ...prev,
             [regNum]: {
                 ...prev[regNum],
                 [section]: {
                     ...prev[regNum][section],
-                    [index]: parsedValue
+                    [index]: {
+                        ...prev[regNum]?.[section]?.[index],
+                        [type]: type === 'score' 
+                            ? (value === '' ? '' : Math.min(Math.max(parseInt(value, 10), 0), maxMarksPerQuestion))
+                            : value
+                    }
                 }
             }
         }));
@@ -74,6 +82,78 @@ const MarkEntry = ({ selectedPattern }) => {
             window.scrollTo(0, 0);
         }
     }, [currentPage]);
+
+    const handleExportToExcel = async () => {
+        try {
+            if (!students.length) {
+                alert('Please initialize students first');
+                return;
+            }
+
+            console.log('Current marks state:', marks); // Debug log
+
+            // Prepare data for export
+            const exportData = {
+                formData: {
+                    department: formData.department || '',
+                    class: formData.class || '',
+                    shift: formData.shift || '',
+                    courseCode: formData.courseCode || '',
+                    courseTitle: formData.courseTitle || '',
+                    subjectIncharge: formData.subjectIncharge || '',
+                    examDate: formData.examDate || ''
+                },
+                studentsData: students.map(regNum => {
+                    // Ensure marks object exists for this student
+                    const studentMarks = marks[regNum] || {};
+                    
+                    return {
+                        regNum,
+                        // Section A: 10 questions
+                        sectionA: Array(10).fill('').map((_, i) => 
+                            studentMarks['Section A']?.[i]?.score || ''
+                        ),
+                        // Section B: 5 questions with choice
+                        sectionB: {
+                            choice: studentMarks['Section B']?.[0]?.choice || '',
+                            marks: Array(5).fill('').map((_, i) => 
+                                studentMarks['Section B']?.[i]?.score || ''
+                            )
+                        },
+                        // Section C: 5 questions with choice
+                        sectionC: {
+                            choice: studentMarks['Section C']?.[0]?.choice || '',
+                            marks: Array(5).fill('').map((_, i) => 
+                                studentMarks['Section C']?.[i]?.score || ''
+                            )
+                        }
+                    };
+                })
+            };
+
+            console.log('Formatted export data:', exportData); // Debug log
+
+            await exportToExcel(exportData);
+
+        } catch (error) {
+            console.error('Export failed:', error);
+            alert(`Failed to generate Excel file: ${error.message}`);
+        }
+    };
+
+    const hasEnteredMarks = () => {
+        return students.some(regNum => {
+            const studentMarks = marks[regNum];
+            if (!studentMarks) return false;
+
+            return Object.values(studentMarks).some(section => {
+                if (!section) return false;
+                return Object.values(section).some(question => 
+                    question && question.score && question.score !== ''
+                );
+            });
+        });
+    };
 
     return (
         <div className="bg-white rounded-lg border p-6">
@@ -165,9 +245,22 @@ const MarkEntry = ({ selectedPattern }) => {
 
             <RangeModal isOpen={modalOpen} onClose={() => setModalOpen(false)} />
 
-            {/* <button onClick={downloadToExcel} className="w-fit mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none">
-                Download to Excel
-            </button> */}
+            <div className="flex justify-between items-center mt-6">
+                <button
+                    onClick={handleExportToExcel}
+                    disabled={!students.length || !hasEnteredMarks()}
+                    className={`px-6 py-2.5 rounded-md transition-colors flex items-center gap-2
+                        ${(!students.length || !hasEnteredMarks()) 
+                            ? 'bg-gray-400 cursor-not-allowed' 
+                            : 'bg-green-600 hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2'
+                        } text-white`}
+                >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    Download Excel Sheet
+                </button>
+            </div>
         </div>
     );
 };

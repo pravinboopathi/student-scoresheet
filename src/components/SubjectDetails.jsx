@@ -187,7 +187,10 @@ const SubjectDetails = ({ formData, setFormData }) => {
                 )}
             </div>
 
-            <MarkEntry selectedPattern={patternOptions} />
+            <MarkEntry 
+                selectedPattern={patternOptions} 
+                formData={formData}  // Pass formData as prop
+            />
         </div>
     );
 };
