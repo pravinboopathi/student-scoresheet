@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
-
+// import TestButton from './TestButton';
 import RangeModal from './RangeModal';
 import StudentList from './StudentList';
 import { FaChevronLeft,FaChevronRight  } from "react-icons/fa";
-import { exportToExcel } from '../utils/excelExport';
+import { saveToGoogleSheets } from '../utils/sheetsExport';
 
 
 const MarkEntry = ({ selectedPattern, formData }) => {
@@ -83,61 +83,35 @@ const MarkEntry = ({ selectedPattern, formData }) => {
         }
     }, [currentPage]);
 
-    const handleExportToExcel = async () => {
+    const handleSaveToSheet = async () => {
         try {
             if (!students.length) {
                 alert('Please initialize students first');
                 return;
             }
 
-            console.log('Current marks state:', marks); // Debug log
+            // Show loading message
+            alert('Saving marks to sheet...');
 
-            // Prepare data for export
-            const exportData = {
+            const dataToSave = {
                 formData: {
-                    department: formData.department || '',
-                    class: formData.class || '',
-                    shift: formData.shift || '',
-                    courseCode: formData.courseCode || '',
-                    courseTitle: formData.courseTitle || '',
-                    subjectIncharge: formData.subjectIncharge || '',
-                    examDate: formData.examDate || ''
+                    examDate: formData.examDate,
+                    department: formData.department,
+                    class: formData.class,
+                    shift: formData.shift,
+                    courseCode: formData.courseCode,
+                    courseTitle: formData.courseTitle,
+                    subjectIncharge: formData.subjectIncharge
                 },
-                studentsData: students.map(regNum => {
-                    // Ensure marks object exists for this student
-                    const studentMarks = marks[regNum] || {};
-                    
-                    return {
-                        regNum,
-                        // Section A: 10 questions
-                        sectionA: Array(10).fill('').map((_, i) => 
-                            studentMarks['Section A']?.[i]?.score || ''
-                        ),
-                        // Section B: 5 questions with choice
-                        sectionB: {
-                            choice: studentMarks['Section B']?.[0]?.choice || '',
-                            marks: Array(5).fill('').map((_, i) => 
-                                studentMarks['Section B']?.[i]?.score || ''
-                            )
-                        },
-                        // Section C: 5 questions with choice
-                        sectionC: {
-                            choice: studentMarks['Section C']?.[0]?.choice || '',
-                            marks: Array(5).fill('').map((_, i) => 
-                                studentMarks['Section C']?.[i]?.score || ''
-                            )
-                        }
-                    };
-                })
+                students: students // Array of register numbers
             };
 
-            console.log('Formatted export data:', exportData); // Debug log
-
-            await exportToExcel(exportData);
+            // Pass both structured data and marks object
+            await saveToGoogleSheets(dataToSave, marks);
 
         } catch (error) {
-            console.error('Export failed:', error);
-            alert(`Failed to generate Excel file: ${error.message}`);
+            console.error('Save failed:', error);
+            alert(`Failed to save marks: ${error.message}`);
         }
     };
 
@@ -247,7 +221,7 @@ const MarkEntry = ({ selectedPattern, formData }) => {
 
             <div className="flex justify-between items-center mt-6">
                 <button
-                    onClick={handleExportToExcel}
+                    onClick={handleSaveToSheet}
                     disabled={!students.length || !hasEnteredMarks()}
                     className={`px-6 py-2.5 rounded-md transition-colors flex items-center gap-2
                         ${(!students.length || !hasEnteredMarks()) 
@@ -256,10 +230,11 @@ const MarkEntry = ({ selectedPattern, formData }) => {
                         } text-white`}
                 >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
                     </svg>
-                    Download Excel Sheet
+                    Save to Sheet
                 </button>
+                {/* <TestButton/>. */}
             </div>
         </div>
     );
