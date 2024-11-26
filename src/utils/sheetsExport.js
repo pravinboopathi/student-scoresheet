@@ -3,15 +3,13 @@ const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1f6392kZ6zO7Zgj-hkmnIi
 
 export const saveToGoogleSheets = async (data, marks) => {
     try {
-        const preflightResponse = await fetch(SCRIPT_URL, {
-            method: 'OPTIONS',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-            },
-            mode: 'cors'
+        console.log('Step 1: Initial data received:', {
+            formData: data.formData,
+            students: data.students,
+            marks: marks
         });
 
+        // Restructure the data to match expected format
         const exportData = {
             formData: {
                 examDate: data.formData.examDate,
@@ -24,6 +22,7 @@ export const saveToGoogleSheets = async (data, marks) => {
             },
             studentsData: data.students.map(regNum => {
                 const studentMarks = marks[regNum] || {};
+                console.log(`Processing student ${regNum}:`, studentMarks);
                 return {
                     regNum: regNum,
                     sectionA: Object.values(studentMarks['Section A'] || {}).map(q => q.score || ''),
@@ -40,35 +39,37 @@ export const saveToGoogleSheets = async (data, marks) => {
             })
         };
 
+        console.log('Step 2: Structured data to send:', JSON.stringify(exportData, null, 2));
+
         const response = await fetch(SCRIPT_URL, {
             method: 'POST',
+            mode: 'no-cors',  // Ensure that CORS issues are handled in the script
+            cache: 'no-cache',
             headers: {
-                'Accept': 'application/json',
                 'Content-Type': 'application/json',
             },
-            mode: 'cors',
-            redirect: 'follow',
             body: JSON.stringify(exportData)
         });
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Response not OK:', errorText);
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        console.log('Step 3: Response from sheets:', response);
+        console.log('Response type:', response.type);
+        console.log('Response status:', response.status);
 
-        const result = await response.json();
-        if (result.success) {
+        // Check if the response is opaque (indicating success in Apps Script)
+        if (response.type === 'opaque') {
+            console.log('Step 4: Opening sheet in new tab');
             window.open(SHEET_URL, '_blank');
             return true;
         }
-        throw new Error(result.message || 'Failed to save to sheet');
+
+        return false;
     } catch (error) {
         console.error('Save error:', error);
-        throw new Error(`Failed to save marks: ${error.message}`);
+        throw error;
     }
 };
 
+// Helper function to calculate total marks
 function calculateTotalMarks(studentMarks) {
     const sectionATotal = Object.values(studentMarks['Section A'] || {})
         .reduce((sum, q) => sum + (parseInt(q.score) || 0), 0);
