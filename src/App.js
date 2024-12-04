@@ -7,6 +7,8 @@ import ResponsiveWrapper from './components/ResponsiveWrapper';
 import MarksEntry from './components/MarksEntry';
 import Login from './components/Login';
 import ProtectedRoute from './components/ProtectedRoute';
+import ViewSheets from './components/viewSheets';
+
 
 function App() {
   return (
@@ -17,6 +19,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
+            <Route path='/view-sheets' element={<ViewSheets/>} />
             <Route
               path="/marks-entry"
               element={

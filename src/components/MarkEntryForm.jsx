@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
-// import TestButton from './TestButton';
 import RangeModal from './RangeModal';
 import StudentList from './StudentList';
-import { FaChevronLeft,FaChevronRight  } from "react-icons/fa";
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { saveToGoogleSheets } from '../utils/sheetsExport';
-
+import SpreadsheetModal from './SpreadsheetModal';
+import LoadingModal from './LoadingModal';
 
 const MarkEntry = ({ selectedPattern, formData }) => {
     const [students, setStudents] = useState([]);
@@ -15,6 +15,9 @@ const MarkEntry = ({ selectedPattern, formData }) => {
     const studentsPerPage = 10;
     const [modalOpen, setModalOpen] = useState(false);
     const [totalStudents, setTotalStudents] = useState(0);
+    const [spreadsheetInfo, setSpreadsheetInfo] = useState({ url: '', name: '' });
+    const [isSubmitting, setIsSubmitting] = useState(false); // New loading state
+
 
     const paginationRef = useRef(null);
 
@@ -72,8 +75,6 @@ const MarkEntry = ({ selectedPattern, formData }) => {
         }));
     };
 
-
-
     const totalPages = Math.ceil(students.length / studentsPerPage);
     const currentStudents = students.slice((currentPage - 1) * studentsPerPage, currentPage * studentsPerPage);
 
@@ -89,10 +90,10 @@ const MarkEntry = ({ selectedPattern, formData }) => {
                 alert('Please initialize students first');
                 return;
             }
-
-            // Show loading message
-            alert('Saving marks to sheet...');
-
+    
+            // Set loading state
+            setIsSubmitting(true);
+    
             const dataToSave = {
                 formData: {
                     examDate: formData.examDate,
@@ -101,19 +102,44 @@ const MarkEntry = ({ selectedPattern, formData }) => {
                     shift: formData.shift,
                     courseCode: formData.courseCode,
                     courseTitle: formData.courseTitle,
-                    subjectIncharge: formData.subjectIncharge
+                    subjectIncharge: formData.subjectIncharge,
                 },
-                students: students // Array of register numbers
+                students: students,
             };
-
-            // Pass both structured data and marks object
-            await saveToGoogleSheets(dataToSave, marks);
-
+    
+            const response = await saveToGoogleSheets(dataToSave, marks);
+    
+            if (response.success) {
+                console.log('Spreadsheet created:', response);
+    
+                const recentSheets = JSON.parse(localStorage.getItem('recentSheets') || '[]');
+                const updatedSheets = [
+                    {
+                        name: response.spreadsheetId,
+                        courseCode:response.courseCode,
+                        url: response.spreadsheetUrl,
+                        createdAt: new Date().toISOString(),
+                    },
+                    ...recentSheets,
+                ].slice(0, 10); // Keep the last 10 sheets
+    
+                localStorage.setItem('recentSheets', JSON.stringify(updatedSheets));
+    
+                setSpreadsheetInfo({ url: response.spreadsheetUrl, name: response.spreadsheetId ,  courseCode:response.courseCode, });
+                setModalOpen(true);
+            } else {
+                throw new Error(response.message);
+            }
         } catch (error) {
-            console.error('Save failed:', error);
+            console.error('Error saving to sheet:', error);
             alert(`Failed to save marks: ${error.message}`);
+        } finally {
+            // Reset loading state
+            setIsSubmitting(false);
         }
     };
+    
+    
 
     const hasEnteredMarks = () => {
         return students.some(regNum => {
@@ -216,8 +242,13 @@ const MarkEntry = ({ selectedPattern, formData }) => {
                     </button>
                 ))}
             </div>
-
-            <RangeModal isOpen={modalOpen} onClose={() => setModalOpen(false)} />
+ {/* Loading modal */}
+ <LoadingModal isOpen={isSubmitting} />
+            <SpreadsheetModal 
+                isOpen={modalOpen} 
+                onClose={() => setModalOpen(false)} 
+                spreadsheetInfo={spreadsheetInfo} 
+            />
 
             <div className="flex justify-between items-center mt-6">
                 <button
@@ -234,7 +265,7 @@ const MarkEntry = ({ selectedPattern, formData }) => {
                     </svg>
                     Save to Sheet
                 </button>
-                {/* <TestButton/>. */}
+                
             </div>
         </div>
     );

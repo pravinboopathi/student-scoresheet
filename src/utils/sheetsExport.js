@@ -1,15 +1,9 @@
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz65ux8IZ7flqeWxGCL25PSfCmdwdfZJIR9_Lc1gXRcea-W6FcwPPXbGwOTabcsDR0YYw/exec';
-const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1f6392kZ6zO7Zgj-hkmnIirSsSCDdd9ee3RZyWxGZyPM/edit?usp=sharing';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxtssdb78D-BH6_Xj35GaOPlmf4LAAI1FMpZf4vGiXGYffhvOVMev6C_Fn6JOsiWuNbdw/exec';
 
 export const saveToGoogleSheets = async (data, marks) => {
     try {
-        console.log('Step 1: Initial data received:', {
-            formData: data.formData,
-            students: data.students,
-            marks: marks
-        });
+        console.log('Sending data to serverless function...');
 
-        // Restructure the data to match expected format
         const exportData = {
             formData: {
                 examDate: data.formData.examDate,
@@ -22,7 +16,6 @@ export const saveToGoogleSheets = async (data, marks) => {
             },
             studentsData: data.students.map(regNum => {
                 const studentMarks = marks[regNum] || {};
-                console.log(`Processing student ${regNum}:`, studentMarks);
                 return {
                     regNum: regNum,
                     sectionA: Object.values(studentMarks['Section A'] || {}).map(q => q.score || ''),
@@ -39,32 +32,24 @@ export const saveToGoogleSheets = async (data, marks) => {
             })
         };
 
-        console.log('Step 2: Structured data to send:', JSON.stringify(exportData, null, 2));
-
-        const response = await fetch(SCRIPT_URL, {
+        const response = await fetch('/api/saveMarks', {
             method: 'POST',
-            mode: 'no-cors',  // Ensure that CORS issues are handled in the script
-            cache: 'no-cache',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(exportData)
+            body: JSON.stringify(exportData),
         });
 
-        console.log('Step 3: Response from sheets:', response);
-        console.log('Response type:', response.type);
-        console.log('Response status:', response.status);
+        const result = await response.json();
 
-        // Check if the response is opaque (indicating success in Apps Script)
-        if (response.type === 'opaque') {
-            console.log('Step 4: Opening sheet in new tab');
-            window.open(SHEET_URL, '_blank');
-            return true;
+        if (result.success) {
+            console.log('Spreadsheet created:', result);
+            return result;
+        } else {
+            throw new Error(result.message);
         }
-
-        return false;
     } catch (error) {
-        console.error('Save error:', error);
+        console.error('Error in saveToGoogleSheets:', error);
         throw error;
     }
 };
