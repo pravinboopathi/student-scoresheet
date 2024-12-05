@@ -13,11 +13,11 @@ const MarkEntry = ({ selectedPattern, formData }) => {
     const [regTo, setRegTo] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const studentsPerPage = 10;
-    const [modalOpen, setModalOpen] = useState(false);
+    const [spreadsheetModalOpen, setSpreadsheetModalOpen] = useState(false); // For SpreadsheetModal
+    const [rangeModalOpen, setRangeModalOpen] = useState(false); // For RangeModal
     const [totalStudents, setTotalStudents] = useState(0);
     const [spreadsheetInfo, setSpreadsheetInfo] = useState({ url: '', name: '' });
     const [isSubmitting, setIsSubmitting] = useState(false); // New loading state
-
 
     const paginationRef = useRef(null);
 
@@ -42,7 +42,8 @@ const MarkEntry = ({ selectedPattern, formData }) => {
             });
             setMarks(initialMarks);
         } else {
-            setModalOpen(true);
+            // Open RangeModal instead of SpreadsheetModal
+            setRangeModalOpen(true);
         }
     };
 
@@ -116,7 +117,7 @@ const MarkEntry = ({ selectedPattern, formData }) => {
                 const updatedSheets = [
                     {
                         name: response.spreadsheetId,
-                        courseCode:response.courseCode,
+                        courseCode: response.courseCode,
                         url: response.spreadsheetUrl,
                         createdAt: new Date().toISOString(),
                     },
@@ -125,8 +126,8 @@ const MarkEntry = ({ selectedPattern, formData }) => {
     
                 localStorage.setItem('recentSheets', JSON.stringify(updatedSheets));
     
-                setSpreadsheetInfo({ url: response.spreadsheetUrl, name: response.spreadsheetId ,  courseCode:response.courseCode, });
-                setModalOpen(true);
+                setSpreadsheetInfo({ url: response.spreadsheetUrl, name: response.spreadsheetId, courseCode: response.courseCode });
+                setSpreadsheetModalOpen(true);
             } else {
                 throw new Error(response.message);
             }
@@ -138,8 +139,6 @@ const MarkEntry = ({ selectedPattern, formData }) => {
             setIsSubmitting(false);
         }
     };
-    
-    
 
     const hasEnteredMarks = () => {
         return students.some(regNum => {
@@ -188,37 +187,6 @@ const MarkEntry = ({ selectedPattern, formData }) => {
 
             <p className="text-green-600 font-medium mb-4">Total range of students is calculated: {regFrom} - {regTo} (Total: {totalStudents})</p>
 
-            <div id="pagination-arrows" className='flex gap-2 mb-2 cursor-pointer'>
-              <div 
-                onClick={() => {
-                  setCurrentPage(prev => {
-                    const newPage = Math.max(prev - 1, 1);
-                    setTimeout(() => {
-                      document.getElementById('pagination-arrows').scrollIntoView({ behavior: 'smooth' });
-                    }, 0);
-                    return newPage;
-                  });
-                }}
-                className='bg-blue-500 hover:bg-blue-700 p-2 rounded-full text-white'
-              >
-                <FaChevronLeft/>
-              </div>
-              <div 
-                onClick={() => {
-                  setCurrentPage(prev => {
-                    const newPage = Math.min(prev + 1, totalPages);
-                    setTimeout(() => {
-                      document.getElementById('pagination-arrows').scrollIntoView({ behavior: 'smooth' });
-                    }, 0);
-                    return newPage;
-                  });
-                }}
-                className='bg-blue-500 hover:bg-blue-700 p-2 rounded-full text-white'
-              >
-                <FaChevronRight />
-              </div>
-            </div>
-            
             <StudentList
                 currentStudents={currentStudents}
                 selectedPattern={selectedPattern}
@@ -226,28 +194,20 @@ const MarkEntry = ({ selectedPattern, formData }) => {
                 handleInputChange={handleInputChange}
             />
 
-            <div className="flex justify-center mt-4">
-                {Array.from({ length: totalPages }, (_, index) => (
-                    <button
-                        key={index + 1}
-                        onClick={() => {
-                            setCurrentPage(index + 1);
-                            setTimeout(() => {
-                              document.getElementById('pagination-arrows').scrollIntoView({ behavior: 'smooth' });
-                            }, 0);
-                        }}
-                        className={`mx-1 px-3 py-1 rounded-md ${currentPage === index + 1 ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-700 hover:bg-blue-500 hover:text-white'}`}
-                    >
-                        {index + 1}
-                    </button>
-                ))}
-            </div>
- {/* Loading modal */}
- <LoadingModal isOpen={isSubmitting} />
+            {/* Loading Modal */}
+            <LoadingModal isOpen={isSubmitting} />
+            
+            {/* Spreadsheet Modal */}
             <SpreadsheetModal 
-                isOpen={modalOpen} 
-                onClose={() => setModalOpen(false)} 
+                isOpen={spreadsheetModalOpen} 
+                onClose={() => setSpreadsheetModalOpen(false)} 
                 spreadsheetInfo={spreadsheetInfo} 
+            />
+            
+            {/* Range Modal */}
+            <RangeModal 
+                isOpen={rangeModalOpen} 
+                onClose={() => setRangeModalOpen(false)} 
             />
 
             <div className="flex justify-between items-center mt-6">
@@ -260,12 +220,8 @@ const MarkEntry = ({ selectedPattern, formData }) => {
                             : 'bg-green-600 hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2'
                         } text-white`}
                 >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-                    </svg>
                     Save to Sheet
                 </button>
-                
             </div>
         </div>
     );
