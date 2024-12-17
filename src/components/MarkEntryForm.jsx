@@ -187,6 +187,37 @@ const MarkEntry = ({ selectedPattern, formData }) => {
 
             <p className="text-green-600 font-medium mb-4">Total range of students is calculated: {regFrom} - {regTo} (Total: {totalStudents})</p>
 
+            <div id="pagination-arrows" className='flex gap-2 mb-2 cursor-pointer'>
+              <div 
+                onClick={() => {
+                  setCurrentPage(prev => {
+                    const newPage = Math.max(prev - 1, 1);
+                    setTimeout(() => {
+                      document.getElementById('pagination-arrows').scrollIntoView({ behavior: 'smooth' });
+                    }, 0);
+                    return newPage;
+                  });
+                }}
+                className='bg-blue-500 hover:bg-blue-700 p-2 rounded-full text-white'
+              >
+                <FaChevronLeft/>
+              </div>
+              <div 
+                onClick={() => {
+                  setCurrentPage(prev => {
+                    const newPage = Math.min(prev + 1, totalPages);
+                    setTimeout(() => {
+                      document.getElementById('pagination-arrows').scrollIntoView({ behavior: 'smooth' });
+                    }, 0);
+                    return newPage;
+                  });
+                }}
+                className='bg-blue-500 hover:bg-blue-700 p-2 rounded-full text-white'
+              >
+                <FaChevronRight />
+              </div>
+            </div>
+
             <StudentList
                 currentStudents={currentStudents}
                 selectedPattern={selectedPattern}
