@@ -1,26 +1,13 @@
 import React from 'react';
 import { FaTimes } from "react-icons/fa";
-import Confetti from 'react-confetti';
-import { useWindowSize } from 'react-use'; // For dynamic confetti size
 
 const SpreadsheetModal = ({ isOpen, onClose, spreadsheetInfo }) => {
-    // Always call hooks at the top level
-    const { width, height } = useWindowSize();
-
     if (!isOpen) return null;
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-            {/* Confetti Effect */}
-            <Confetti
-                width={width}
-                height={height}
-                numberOfPieces={200} // Adjust number of confetti pieces
-                recycle={false} // Run confetti once
-            />
-
             {/* Modal Content */}
-            <div className="relative bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
+            <div className="relative bg-white p-8 rounded-lg shadow-lg max-w-md w-full border border-gray-300">
                 {/* Close Button */}
                 <button
                     onClick={onClose}

@@ -18,10 +18,16 @@ const MarkEntry = ({ selectedPattern, formData }) => {
     const [totalStudents, setTotalStudents] = useState(0);
     const [spreadsheetInfo, setSpreadsheetInfo] = useState({ url: '', name: '' });
     const [isSubmitting, setIsSubmitting] = useState(false); // New loading state
+    const [alertModalOpen, setAlertModalOpen] = useState(false); // New state for alert modal
 
     const paginationRef = useRef(null);
 
     const initializeStudents = () => {
+        if (selectedPattern.length === 0) {
+            setAlertModalOpen(true); // Open alert modal if no pattern is selected
+            return;
+        }
+
         const from = parseInt(regFrom);
         const to = parseInt(regTo);
         if (!isNaN(from) && !isNaN(to) && from >= 1 && to - from < 70) {
@@ -156,10 +162,10 @@ const MarkEntry = ({ selectedPattern, formData }) => {
 
     return (
         <div className="bg-white rounded-lg border p-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">Mark Entry</h2>
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">Dummy Register Number</h2>
 
             <div className="mb-6 max-w-fit">
-                <label className="block text-sm font-medium text-gray-600 mb-1">Register Number From:</label>
+                <label className="block text-sm font-medium text-gray-600 mb-1">From:</label>
                 <input
                     type="number"
                     value={regFrom}
@@ -168,7 +174,7 @@ const MarkEntry = ({ selectedPattern, formData }) => {
                     className="w-full mb-2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
                     placeholder="Eg : 23127001"
                 />
-                <label className="block text-sm font-medium text-gray-600 mb-1">Register Number To:</label>
+                <label className="block text-sm font-medium text-gray-600 mb-1">To:</label>
                 <input
                     type="number"
                     value={regTo}
@@ -272,6 +278,22 @@ const MarkEntry = ({ selectedPattern, formData }) => {
                     Save to Sheet
                 </button>
             </div>
+
+            {/* Alert Modal */}
+            {alertModalOpen && (
+                <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+                    <div className="bg-white p-6 rounded-lg shadow-lg border border-gray-300">
+                        <h2 className="text-lg font-semibold text-gray-800 mb-4">Alert</h2>
+                        <p className="text-gray-600 mb-4">Please select a <span className='text-red-600 font-semibold'>Total mark pattern</span>  before initializing students.</p>
+                        <button
+                            onClick={() => setAlertModalOpen(false)}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none"
+                        >
+                            Close
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

@@ -18,14 +18,14 @@ export const saveToGoogleSheets = async (data, marks) => {
                 const studentMarks = marks[regNum] || {};
                 return {
                     regNum: regNum,
-                    sectionA: Object.values(studentMarks['Section A'] || {}).map(q => q.score || ''),
+                    sectionA: Object.values(studentMarks['Section A'] || {}).map(q => q.score !== undefined ? q.score : ''),
                     sectionB: Array(5).fill(null).map((_, i) => ({
                         choice: studentMarks['Section B']?.[i]?.choice || 'A',
-                        score: studentMarks['Section B']?.[i]?.score || ''
+                        score: studentMarks['Section B']?.[i]?.score !== undefined ? studentMarks['Section B'][i].score : ''
                     })),
                     sectionC: Array(5).fill(null).map((_, i) => ({
                         choice: studentMarks['Section C']?.[i]?.choice || 'A',
-                        score: studentMarks['Section C']?.[i]?.score || ''
+                        score: studentMarks['Section C']?.[i]?.score !== undefined ? studentMarks['Section C'][i].score : ''
                     })),
                     totalMarks: calculateTotalMarks(studentMarks)
                 };
